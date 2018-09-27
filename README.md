@@ -39,7 +39,7 @@ body=ankle
 ```
 Execute:
 ```
-$ python script.py template [VARFILE]=variables-template
+$ python script.py template --varfile=variables-template
 ```
 Done.
 
@@ -51,9 +51,9 @@ body=ankle
 ```
 And execution like:
 ```
-$ python script.py template [VARFILE]=variables-template [FROM]=account-mail [PW]=accound-password [TO]=target-mail
+$ python script.py template --varfile=variables-template [FROM]=account-mail [PW]=accound-password [TO]=target-mail
 ```
-Done.
+The script prefers the arguments given with commandline.
 
 ### Output
 The Output should look like this:

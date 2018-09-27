@@ -5,16 +5,17 @@ import smtplib
 TEMPLATE = sys.argv[1]
 
 # check for rest of args
-var_def = []
+VARDEF = []
 VARFILE = None
 FROM = None
 PW = None
 TO = None
+
 if len(sys.argv) > 2:
 	for i in range(2, len(sys.argv)):
-		var_def.append(sys.argv[i])
-		if "[VARFILE]" in sys.argv[i]:
-			VARFILE = sys.argv[i].rstrip().replace("[VARFILE]=", "")
+		VARDEF.append(sys.argv[i])
+		if "--varfile" in sys.argv[i]:
+			VARFILE = sys.argv[i].rstrip().replace("--varfile=", "")
 		if "[TO]" in sys.argv[i]:
 			TO = sys.argv[i].rstrip().replace("[TO]=", "")
 		if "[PW]" in sys.argv[i]:
@@ -26,7 +27,6 @@ if len(sys.argv) > 2:
 # if VARFILE definition found: open and save var_defs
 if VARFILE is not None:
 	file = open(VARFILE, "r")
-	var_def = []
 	for line in file:
 		if "[TO]" in line:
 			TO = line.rstrip().replace("[TO]=", "")
@@ -34,17 +34,26 @@ if VARFILE is not None:
 			PW = line.rstrip().replace("[PW]=", "")
 		if "[FROM]" in line:
 			FROM = line.rstrip().replace("[FROM]=", "")
-		else:
-			var_def.append(line.rstrip())
+		if not any(line.split("=")[0] in elem for elem in VARDEF):
+			VARDEF.append(line.rstrip())
+
+# check if required variables are given
+if FROM is None or PW is None or TO is None:
+	if FROM is None:
+		print("Err: FROM not defined")
+	if PW is None:
+		print("Err: PW not defined")
+	if TO is None:
+		print("Err: TO not defined")
+	sys.exit()
 
 # preinit of templatetext vars
 var = []
 subject = ""
 body = ""
 
-# open the template
-file = open(TEMPLATE, "r")
 # go through template
+file = open(TEMPLATE, "r")
 MODE = None
 for line in file:
 	if "VAR:" in line:
@@ -64,11 +73,11 @@ for line in file:
 subject = subject.rstrip()
 
 
-# now we have TO, var[], var_def[], subject, body
-# replace vars ind subject and body with definitions in var_def[]
+# now we have TO, var[], VARDEF[], subject, body
+# replace vars ind subject and body with definitions in VARDEF[]
 for var_sngl in var:
 	contains = None
-	for var_def_sngl in var_def:
+	for var_def_sngl in VARDEF:
 		if var_sngl in var_def_sngl:
 			contains = var_def_sngl
 	if contains is None:
@@ -94,11 +103,14 @@ bool_send = input("Send? (y/n): ")
 if bool_send is not "y":
 	sys.exit()
 
+# setting up server
 server = smtplib.SMTP_SSL('smtp.gmail.com')
 server.set_debuglevel(1)
 server.ehlo
 
+# setting up credentials
 server.login(FROM.replace("@gmail.com", ""), PW)
 server.sendmail(FROM, TO, "Subject: {}\n\n{}".format(subject, body))
 server.quit()
+
 print("\nE-Mail sent..")
