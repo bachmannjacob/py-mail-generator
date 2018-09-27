@@ -1,0 +1,4 @@
+[TO]=jb9700@gmx.de
+[USER]=Jacob Bachmann
+[TEXT]=This is an awesome script you produced right there. With this breathtaking complexity and depth of a human beings mind you should go right now, save the world, get the answers to the mistery of the big bang.
+[ME]=Albert Einstein

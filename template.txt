@@ -1,0 +1,13 @@
+VAR:
+[USER]
+[TEXT]
+[ME]
+SUBJECT:
+Great work, [USER]!
+BODY:
+Dear [USER],
+
+[TEXT]
+
+Sincerely,
+[ME]
