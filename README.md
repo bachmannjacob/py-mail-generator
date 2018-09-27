@@ -54,3 +54,14 @@ And execution like:
 $ python script.py template [VARFILE]=variables-template [FROM]=account-mail [PW]=accound-password [TO]=target-mail
 ```
 Done.
+
+### Output
+The Output should look like this:
+```
+To: target-mail
+------------
+Subject: Everything that should be displayed in the subject-section
+------------
+
+Everything that should be displayed in the ankle-section
+```
