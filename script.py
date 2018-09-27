@@ -23,7 +23,6 @@ if len(sys.argv) > 2:
 		if "[FROM]" in sys.argv[i]:
 			FROM = sys.argv[i].rstrip().replace("[FROM]=", "")
 
-
 # if VARFILE definition found: open and save var_defs
 if VARFILE is not None:
 	file = open(VARFILE, "r")
@@ -72,7 +71,6 @@ for line in file:
 
 subject = subject.rstrip()
 
-
 # now we have TO, var[], VARDEF[], subject, body
 # replace vars ind subject and body with definitions in VARDEF[]
 for var_sngl in var:
@@ -96,7 +94,6 @@ print("Subject: " + subject)
 print("------------")
 print("\n" + body)
 print("\n==================================================\n")
-
 
 # send mail
 bool_send = input("Send? (y/n): ")
