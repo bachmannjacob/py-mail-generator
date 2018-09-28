@@ -72,3 +72,11 @@ Subject: Everything that should be displayed in the subject-section
 
 Everything that should be displayed in the ankle-section
 ```
+
+## Upcoming
+What is coming next:
+```
+- SMTP-presets for gmail, gmx and outlook
+- Feature to define own SMTP-Server credentials
+- Support for multiple target-mails and -specific variables
+```
