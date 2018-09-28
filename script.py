@@ -1,5 +1,6 @@
 import sys
 import smtplib
+import win32com.client as win32
 
 # save template
 TEMPLATE = sys.argv[1]
@@ -10,12 +11,15 @@ VARFILE = None
 FROM = None
 PW = None
 TO = None
+O_FLAG = False
 
 if len(sys.argv) > 2:
 	for i in range(2, len(sys.argv)):
 		VARDEF.append(sys.argv[i])
 		if "--varfile" in sys.argv[i]:
 			VARFILE = sys.argv[i].rstrip().replace("--varfile=", "")
+		if "-o" in sys.argv[i] or "--outlook" in sys.argv[i]:
+			O_FLAG = True
 		if "[TO]" in sys.argv[i]:
 			TO = sys.argv[i].rstrip().replace("[TO]=", "")
 		if "[PW]" in sys.argv[i]:
@@ -27,17 +31,17 @@ if len(sys.argv) > 2:
 if VARFILE is not None:
 	file = open(VARFILE, "r")
 	for line in file:
-		if "[TO]" in line:
+		if "[TO]" in line and not any("[TO]" in elem for elem in VARDEF):
 			TO = line.rstrip().replace("[TO]=", "")
-		if "[PW]" in line:
+		if "[PW]" in line and not any("[PW]" in elem for elem in VARDEF):
 			PW = line.rstrip().replace("[PW]=", "")
-		if "[FROM]" in line:
+		if "[FROM]" in line and not any("[FROM]" in elem for elem in VARDEF):
 			FROM = line.rstrip().replace("[FROM]=", "")
 		if not any(line.split("=")[0] in elem for elem in VARDEF):
 			VARDEF.append(line.rstrip())
 
 # check if required variables are given
-if FROM is None or PW is None or TO is None:
+if O_FLAG is False and (FROM is None or PW is None or TO is None):
 	if FROM is None:
 		print("Err: FROM not defined")
 	if PW is None:
@@ -100,14 +104,23 @@ bool_send = input("Send? (y/n): ")
 if bool_send is not "y":
 	sys.exit()
 
-# setting up server
-server = smtplib.SMTP_SSL('smtp.gmail.com')
-server.set_debuglevel(1)
-server.ehlo
+if not O_FLAG:
+	# setting up server
+	server = smtplib.SMTP_SSL('smtp.gmail.com')
+	server.set_debuglevel(1)
+	server.ehlo
 
-# setting up credentials
-server.login(FROM.replace("@gmail.com", ""), PW)
-server.sendmail(FROM, TO, "Subject: {}\n\n{}".format(subject, body))
-server.quit()
+	# setting up credentials
+	server.login(FROM.replace("@gmail.com", ""), PW)
+	server.sendmail(FROM, TO, "Subject: {}\n\n{}".format(subject, body))
+	server.quit()
+else:
+	print("Using Outlook ...")
+	outlook = win32.Dispatch("outlook.application")
+	mail = outlook.CreateItem(0)
+	mail.To = TO
+	mail.Subject = subject
+	mail.Body = body
+	mail.Send()
 
 print("\nE-Mail sent..")
