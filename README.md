@@ -78,5 +78,6 @@ What is coming next:
 ```
 - SMTP-presets for gmail, gmx and outlook
 - Feature to define own SMTP-Server credentials
+- Save own SMTP credentials as profile to use again
 - Support for multiple target-mails and -specific variables
 ```
