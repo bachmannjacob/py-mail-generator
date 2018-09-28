@@ -2,7 +2,7 @@
 Python-Script to generate mails and send them via SMTP.
 
 ## Usage
-There are three possibilites to run the script and define the mail:
+There are four possibilites to run the script and define the mail:
 
 ### The template
 The template should always look like this:
@@ -54,6 +54,13 @@ And execution like:
 $ python script.py template --varfile=variables-template [FROM]=account-mail [PW]=accound-password [TO]=target-mail
 ```
 The script prefers the arguments given with commandline.
+
+### 4. Method - Use Outlook
+If you add the -o or --outlook flag the script tries to use the local Outlook-Application to send the mail.
+Therefore you do not need to log in and resulting there is no need to specifie [FROM] and [PW]
+```
+$ python script.py template -o --varfile=variables-template [TO]=target-mail
+```
 
 ### Output
 The Output should look like this:
