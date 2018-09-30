@@ -11,15 +11,19 @@ VARFILE = None
 FROM = None
 PW = None
 TO = None
-O_FLAG = False
+Y_FLAG = False
+M_FLAG = None
 
 if len(sys.argv) > 2:
 	for i in range(2, len(sys.argv)):
 		VARDEF.append(sys.argv[i])
 		if "--varfile" in sys.argv[i]:
-			VARFILE = sys.argv[i].rstrip().replace("--varfile=", "")
-		if "-o" in sys.argv[i] or "--outlook" in sys.argv[i]:
-			O_FLAG = True
+			VARFILE = sys.argv[i].rstrip().split("=")[1]
+		if "-y" in sys.argv[i]:
+			Y_FLAG = True
+		if "--mode" in sys.argv[i]:
+			M_FLAG = sys.argv[i].rstrip().split("=")[1]
+			print(M_FLAG)
 		if "[TO]" in sys.argv[i]:
 			TO = sys.argv[i].rstrip().replace("[TO]=", "")
 		if "[PW]" in sys.argv[i]:
@@ -31,17 +35,17 @@ if len(sys.argv) > 2:
 if VARFILE is not None:
 	file = open(VARFILE, "r")
 	for line in file:
-		if "[TO]" in line and not any("[TO]" in elem for elem in VARDEF):
+		if "[TO]" in line and TO is None:
 			TO = line.rstrip().replace("[TO]=", "")
-		if "[PW]" in line and not any("[PW]" in elem for elem in VARDEF):
+		if "[PW]" in line and TO is None:
 			PW = line.rstrip().replace("[PW]=", "")
-		if "[FROM]" in line and not any("[FROM]" in elem for elem in VARDEF):
+		if "[FROM]" in line and FROM is None:
 			FROM = line.rstrip().replace("[FROM]=", "")
 		if not any(line.split("=")[0] in elem for elem in VARDEF):
 			VARDEF.append(line.rstrip())
 
 # check if required variables are given
-if O_FLAG is False and (FROM is None or PW is None or TO is None):
+if M_FLAG != "outlook" and (FROM is None or PW is None or TO is None):
 	if FROM is None:
 		print("Err: FROM not defined")
 	if PW is None:
@@ -51,9 +55,9 @@ if O_FLAG is False and (FROM is None or PW is None or TO is None):
 	sys.exit()
 
 # preinit of templatetext vars
-var = []
-subject = ""
-body = ""
+VAR = []
+SUBJECT = ""
+BODY = ""
 
 # go through template
 file = open(TEMPLATE, "r")
@@ -67,17 +71,17 @@ for line in file:
 		MODE = "BODY"
 	else:
 		if MODE is "VAR":
-			var.append(line.rstrip())
+			VAR.append(line.rstrip())
 		if MODE is "SUBJECT":
-			subject += line
+			SUBJECT += line
 		if MODE is "BODY":
-			body += line
+			BODY += line
 
-subject = subject.rstrip()
+SUBJECT = SUBJECT.rstrip()
 
-# now we have TO, var[], VARDEF[], subject, body
-# replace vars ind subject and body with definitions in VARDEF[]
-for var_sngl in var:
+# now we have TO, VAR[], VARDEF[], SUBJECT, BODY
+# replace vars ind SUBJECT and BODY with definitions in VARDEF[]
+for var_sngl in VAR:
 	contains = None
 	for var_def_sngl in VARDEF:
 		if var_sngl in var_def_sngl:
@@ -87,40 +91,58 @@ for var_sngl in var:
 		sys.exit()
 	else:
 		dfntn = contains.split("=", 1)[1]
-		subject = subject.replace(var_sngl, dfntn)
-		body = body.replace(var_sngl, dfntn)
+		SUBJECT = SUBJECT.replace(var_sngl, dfntn)
+		BODY = BODY.replace(var_sngl, dfntn)
 
 # make it beautiful
 print("==================================================\n")
 print("To: " + TO)
 print("------------")
-print("Subject: " + subject)
+print("SUBJECT: " + SUBJECT)
 print("------------")
-print("\n" + body)
+print("\n" + BODY)
 print("\n==================================================\n")
 
 # send mail
-bool_send = input("Send? (y/n): ")
-if bool_send is not "y":
-	sys.exit()
+if not Y_FLAG:
+	bool_send = input("Send? (y/n): ")
+	if bool_send is not "y":
+		sys.exit()
 
-if not O_FLAG:
+# defining smtp function
+def smtp_send(ssl, server):
 	# setting up server
-	server = smtplib.SMTP_SSL('smtp.gmail.com')
+	if ssl:
+		print("Using SSL ...")
+		server = smtplib.SMTP_SSL(server)
+	else:
+		server = smtplib.SMTP(server)
+	
 	server.set_debuglevel(1)
 	server.ehlo
-
+	print(FROM.split("@")[0])
 	# setting up credentials
-	server.login(FROM.replace("@gmail.com", ""), PW)
-	server.sendmail(FROM, TO, "Subject: {}\n\n{}".format(subject, body))
+	if ssl:
+		server.login(FROM.split("@")[0], PW)
+	else:
+		server.login(FROM, PW)
+	server.sendmail(FROM, TO, "Subject: {}\n\n{}".format(SUBJECT, BODY))
 	server.quit()
-else:
+
+
+if M_FLAG == "outlook":
 	print("Using Outlook ...")
 	outlook = win32.Dispatch("outlook.application")
 	mail = outlook.CreateItem(0)
 	mail.To = TO
-	mail.Subject = subject
-	mail.Body = body
+	mail.Subject = SUBJECT
+	mail.Body = BODY
 	mail.Send()
+if M_FLAG == "gmail":
+	print("Using gmail ...")
+	smtp_send(True, 'smtp.gmail.com')
+if M_FLAG == "gmx":
+	print("Using gmx ...")
+	smtp_send(False, "smtp.gmx.com")
 
 print("\nE-Mail sent..")
